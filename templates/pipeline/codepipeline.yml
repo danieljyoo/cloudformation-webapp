@@ -51,7 +51,7 @@ Parameters:
     Description: The name of the GitHub Repo
   GitHubBranch:
     Type: String
-    Default: master
+    Default: main
     AllowedPattern: "[A-Za-z0-9-]+"
     Description: The name of the GitHub Repo Branch which should be used
   TargetS3Bucket:
@@ -68,7 +68,8 @@ Resources:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
-      BucketName: !Sub ${AWS::StackName}-codepipeline-artifacts
+      # Can result in failure due to bucketname being longer than 63 characters
+      # BucketName: !Sub ${AWS::StackName}-codepipeline-artifacts
       VersioningConfiguration:
         Status: Enabled
   CodeBuildProject:
@@ -183,8 +184,8 @@ Resources:
             Resource: [
               !Sub 'arn:aws:s3:::${TargetS3Bucket}',
               !Sub 'arn:aws:s3:::${TargetS3Bucket}/*',
-              !Sub 'arn:aws:s3:::${AWS::StackName}-codepipeline-artifacts',
-              !Sub 'arn:aws:s3:::${AWS::StackName}-codepipeline-artifacts/*'
+              !GetAtt PipelineArtifactsBucket.Arn,
+              !Join [ "/", [ !GetAtt PipelineArtifactsBucket.Arn, "*" ] ]
             ]
           - Sid: VisualEditor1
             Effect: Allow
@@ -235,8 +236,8 @@ Resources:
             Resource: [
               !Sub 'arn:aws:s3:::${TargetS3Bucket}',
               !Sub 'arn:aws:s3:::${TargetS3Bucket}/*',
-              !Sub 'arn:aws:s3:::${AWS::StackName}-codepipeline-artifacts',
-              !Sub 'arn:aws:s3:::${AWS::StackName}-codepipeline-artifacts/*'
+              !GetAtt PipelineArtifactsBucket.Arn,
+              !Join [ "/", [ !GetAtt PipelineArtifactsBucket.Arn, "*" ] ]
             ]
           - Sid: VisualEditor1
             Effect: Allow
@@ -260,6 +261,10 @@ Resources:
       RoleName:
         Fn::Sub: ${AWS::StackName}-CodeBuildRole
 Outputs:
+  PipelineArtifactsBucket:
+    Description: S3 bucket name where build artifacts are stored
+    Value: 
+      !Ref PipelineArtifactsBucket
   CodeBuildProjectARN:
     Description: CodeBuild Project ARN
     Value:

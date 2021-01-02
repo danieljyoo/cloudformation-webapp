@@ -36,17 +36,24 @@ Parameters:
     Description: The ARN of the ACM SSL Certificate (must be in us-east-1 region)
     Type: String
   GitHubOAuthToken:
-    Description: GitHub OAuth Token
     Type: String
+    NoEcho: true
+    MinLength: 40
+    MaxLength: 40
+    AllowedPattern: '[a-z0-9]*'
+    Description: With this Token a Webhook will be created for the repo
   GitHubOwner:
-    Description: GitHub Owner
     Type: String
+    AllowedPattern: "[A-Za-z0-9-]+"
+    Description: The Owner of the GitHub Repo
   GitHubRepo:
     Description: GitHub Repo
     Type: String
   GitHubBranch:
-    Description: GitHub Branch
     Type: String
+    Default: main
+    AllowedPattern: "[A-Za-z0-9-]+"
+    Description: The name of the GitHub Repo Branch which should be used
   LambdaEdgeArn:
     Description: The ARN of the Lambda@Edge function with adds response security headers (must be in us-east-1 region)
     Type: String
@@ -97,6 +104,8 @@ Resources:
     Properties:
       TemplateURL: https://s3.amazonaws.com/cloudformation-public.starters.run/codepipeline.yml
       Parameters:
+        GitHubOAuthToken:
+          Ref: GitHubOAuthToken
         GitHubOwner:
           Ref: GitHubOwner
         GitHubRepo:
@@ -106,8 +115,8 @@ Resources:
         TargetS3Bucket:
           Fn::GetAtt:
           - S3
-          - Outputs.S3BucketRootName
-        CloudFrontDistID:
+          - Outputs.S3BucketRoot
+        CloudFrontDistributionId:
           Fn::GetAtt:
           - CloudFront
           - Outputs.CloudFrontDistributionId
